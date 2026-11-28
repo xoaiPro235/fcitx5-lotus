@@ -1164,12 +1164,19 @@ namespace fcitx {
 
     void LotusState::keyEvent(KeyEvent& keyEvent) {
         trackShiftModifier(keyEvent);
+        if (handleKeyEventGuards(keyEvent)) {
+            if (keyEvent.rawKey().check(FcitxKey_Caps_Lock) && keyEvent.isRelease()) {
+                const auto rawStates = keyEvent.rawKey().states();
+                LotusWlrVirtualKeyboard::instance().setUserModifiers(isShiftHeld() || rawStates.test(KeyState::Shift), rawStates.test(KeyState::CapsLock), true);
+            }
+            return;
+        }
+        // Record Shift/CapsLock without flushing before emitImpl(); flushing early can
+        // activate the virtual keyboard under the compositor keymap before uploadKeymap().
         if (!keyEvent.rawKey().isModifier()) {
             const auto rawStates = keyEvent.rawKey().states();
-            LotusWlrVirtualKeyboard::instance().setUserModifiers(isShiftHeld() || rawStates.test(KeyState::Shift), rawStates.test(KeyState::CapsLock));
+            LotusWlrVirtualKeyboard::instance().setUserModifiers(isShiftHeld() || rawStates.test(KeyState::Shift), rawStates.test(KeyState::CapsLock), false);
         }
-        if (handleKeyEventGuards(keyEvent))
-            return;
 
         if (deferredCommitPending_ || !deferredCommitText_.empty()) {
             const KeySym    bufferedSym   = keyEvent.rawKey().sym();

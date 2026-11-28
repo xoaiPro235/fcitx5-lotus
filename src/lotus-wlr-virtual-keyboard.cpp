@@ -518,14 +518,16 @@ namespace fcitx {
         if (userShift_.exchange(down, std::memory_order_acq_rel) == down) {
             return;
         }
-        std::scoped_lock lock(deviceMutex_);
-        syncModifiers();
+        if (!down) {
+            std::scoped_lock lock(deviceMutex_);
+            syncModifiers();
+        }
     }
 
-    void LotusWlrVirtualKeyboard::setUserModifiers(bool shiftDown, bool capsLockOn) {
+    void LotusWlrVirtualKeyboard::setUserModifiers(bool shiftDown, bool capsLockOn, bool sync) {
         const bool prevShift = userShift_.exchange(shiftDown, std::memory_order_acq_rel);
         const bool prevCaps  = userCapsLock_.exchange(capsLockOn, std::memory_order_acq_rel);
-        if (prevShift == shiftDown && prevCaps == capsLockOn) {
+        if (!sync || (prevShift == shiftDown && prevCaps == capsLockOn)) {
             return;
         }
         std::scoped_lock lock(deviceMutex_);

@@ -153,8 +153,10 @@ namespace fcitx {
          * @brief Keeps the virtual keyboard's Shift and locked CapsLock in sync with the user's state.
          * @param shiftDown True while the user holds Shift.
          * @param capsLockOn True while CapsLock is locked on.
+         * @param sync When true, flushes updated modifiers to the compositor immediately; when false,
+         *             records them so the next emitImpl() applies them after its keymap cycle.
          */
-        void setUserModifiers(bool shiftDown, bool capsLockOn);
+        void setUserModifiers(bool shiftDown, bool capsLockOn, bool sync = true);
         /**
          * @brief Hands a delayed task to the shared runner.
          * @param delayMs Delay in milliseconds.
